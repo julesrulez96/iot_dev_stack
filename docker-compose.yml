@@ -1,0 +1,56 @@
+version: "3"
+services:
+  
+  broker:
+    image: eclipse-mosquitto
+    volumes:
+      - "./mosquitto:/mosquitto"
+    networks:
+      - localnet
+    ports:
+      - "1883:1883"
+  
+  node-red:
+    depends_on:
+      - broker
+    image: nodered/node-red
+    volumes:
+      - "./node-red:/data"
+    user: "0"
+    networks:
+      - localnet
+    ports:
+      - "1880:1880"
+  
+  portainer:
+    image: portainer/portainer
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    ports:
+      - 9000:9000
+      - 8000:8000
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./portainer_data:/data"
+    networks:
+      - localnet
+  
+  influxdb:
+    image: influxdb:latest
+    ports:
+      - '8086:8086'
+    command: influxd run --bolt-path /var/lib/influxdb2/conf/influxd.bolt --engine-path /var/lib/influxdb2/engine --store bolt
+    volumes:
+      - "./influx_data:/var/lib/influxdb2/engine"
+      - "./influx_conf:/var/lib/influxdb2/conf"
+    networks:
+      - localnet    
+
+volumes:
+  portainer_data:
+  mosquitto:
+  node-red:
+  influx_data:
+  influx_conf:
+networks:
+  localnet:
